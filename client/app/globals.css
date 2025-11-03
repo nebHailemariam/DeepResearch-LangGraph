@@ -2,7 +2,14 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #202124;
+  --primary-dark: #101218;
+  --hover-bg: rgba(255, 255, 255, 0.1);
+  --hover-bg-strong: rgba(255, 255, 255, 0.15);
+  --badge-bg: rgba(0, 0, 0, 0.1);
+  --accent-gray: #64748b;
+  --border-color: rgba(0, 0, 0, 0.1);
+  --message-bg: #f5f5f5;
 }
 
 @theme inline {
@@ -14,8 +21,15 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #101218;
+    --foreground: #e8eaed;
+    --primary-dark: #1a1d26;
+    --hover-bg: rgba(255, 255, 255, 0.08);
+    --hover-bg-strong: rgba(255, 255, 255, 0.12);
+    --badge-bg: rgba(255, 255, 255, 0.1);
+    --accent-gray: #94a3b8;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --message-bg: #374151;
   }
 }
 

@@ -1,0 +1,42 @@
+.container {
+  display: flex;
+  width: 100%;
+  max-width: 768px;
+  margin-bottom: 1.5rem;
+}
+
+.userMessage {
+  justify-content: flex-end;
+}
+
+.aiMessage {
+  justify-content: flex-start;
+}
+
+.messageBox {
+  max-width: 85%;
+  padding: 0.875rem 1rem;
+  border-radius: 1rem;
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+.userMessage .messageBox {
+  background-color: var(--primary-dark);
+  color: var(--foreground);
+  border-bottom-right-radius: 0.25rem;
+}
+
+.aiMessage .messageBox {
+  background-color: var(--message-bg);
+  color: var(--foreground);
+  border-bottom-left-radius: 0.25rem;
+}
+
+.messageText {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  color: inherit;
+  white-space: pre-wrap;
+}

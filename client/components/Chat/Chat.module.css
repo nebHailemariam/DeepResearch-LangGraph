@@ -1,0 +1,84 @@
+.chatContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  padding: 1rem;
+  background-color: var(--background);
+  border-top: 1px solid var(--border-color);
+  z-index: 30;
+}
+
+@media (min-width: 640px) {
+  .chatContainer {
+    left: 16rem;
+    width: calc(100% - 16rem);
+  }
+}
+
+.inputWrapper {
+  max-width: 768px;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  background-color: var(--message-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 1.5rem;
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.inputWrapper:focus-within {
+  border-color: var(--accent-gray);
+  box-shadow: 0 0 0 2px var(--badge-bg);
+}
+
+.input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  color: var(--foreground);
+  font-size: 1rem;
+  line-height: 1.5;
+  min-height: 1.5rem;
+  max-height: 200px;
+  overflow: hidden;
+  font-family: inherit;
+}
+
+.input::placeholder {
+  color: var(--accent-gray);
+}
+
+.sendButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background-color: transparent;
+  border: none;
+  color: var(--accent-gray);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.sendButton:hover {
+  background-color: var(--hover-bg);
+  color: var(--foreground);
+}
+
+.sendButton:active {
+  transform: scale(0.95);
+}
+
+.sendIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}

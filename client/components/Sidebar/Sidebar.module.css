@@ -1,0 +1,114 @@
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  width: 16rem;
+  height: 100vh;
+  transition: transform 0.3s ease;
+  transform: translateX(-100%);
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+@media (min-width: 640px) {
+  .sidebar {
+    transform: translateX(0);
+  }
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 45;
+}
+
+@media (min-width: 640px) {
+  .overlay {
+    display: none;
+  }
+}
+
+.sidebarContainer {
+  height: 100%;
+  padding: 1rem 0.75rem;
+  overflow-y: auto;
+  background-color: var(--primary-dark);
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.menuTitle {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  color: var(--foreground);
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background-color: var(--hover-bg);
+}
+
+.menuTitle:hover {
+  background-color: var(--hover-bg-strong);
+  transform: translateX(2px);
+}
+
+.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  color: var(--foreground);
+  transition: color 0.2s ease;
+}
+
+.label {
+  margin-left: 0.75rem;
+  flex: 1;
+  white-space: nowrap;
+}
+
+.labelSimple {
+  margin-left: 0.75rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  margin-left: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  background-color: var(--badge-bg);
+  border-radius: 9999px;
+}
+
+.badgeSmall {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.75rem;
+  height: 0.75rem;
+  padding: 0.75rem;
+  margin-left: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  background-color: var(--badge-bg);
+  border-radius: 9999px;
+}
