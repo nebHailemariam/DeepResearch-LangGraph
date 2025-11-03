@@ -95,7 +95,7 @@ def deep_research_agent(state: ResearchState) -> ResearchState:
     message_context = (
         "\n".join([str(msg.content) for msg in messages]) if messages else ""
     )
-    prompt = f"Generate 2 different analyst personas with relevant expertise areas.{(' Based on this conversation:\\n' + message_context) if message_context else ''}"
+    prompt = f"Generate 2 different analyst personas with relevant expertise areas.{(f' Based on this conversation:{chr(10)}{message_context}' if message_context else '')}"
 
     response = structured_llm.invoke(
         [
@@ -188,7 +188,7 @@ def generate_questions(state: AnalystResearchState) -> AnalystResearchState:
                 content=f"You are an expert research strategist{analyst_context}. Generate concise, well-structured research questions that:\n- Are specific and answerable through research\n- Cover different aspects and dimensions of the topic\n- Require in-depth investigation and analysis\n- Build upon each other to create a concise understanding\n- Address both factual and analytical aspects\n- Lead to actionable insights and conclusions\n- Reflect your unique expertise and perspective"
             ),
             HumanMessage(
-                content=f"Generate 2 detailed, well-crafted research questions that will drive thorough investigation from your expertise perspective. Each question should be specific enough to guide concise research while broad enough to uncover important insights.{(' Conversation history:\\n' + message_context) if message_context else ''}"
+                content=f"Generate 2 detailed, well-crafted research questions that will drive thorough investigation from your expertise perspective. Each question should be specific enough to guide concise research while broad enough to uncover important insights.{(f' Conversation history:{chr(10)}{message_context}' if message_context else '')}"
             ),
         ]
     )
@@ -258,7 +258,7 @@ def generate_answer(state: AnalystResearchState) -> AnalystResearchState:
                 content=f"You are an expert research analyst{analyst_context}. Generate a concise, in-depth answer to the research questions based on the search contexts. Your answer should:\n- Provide thorough analysis from your unique expertise perspective\n- Include detailed explanations and reasoning\n- Synthesize information from all search contexts\n- Address each research question concisely\n- Include relevant examples, evidence, and supporting details\n- Draw connections between different pieces of information\n- Provide nuanced insights and deeper understanding\n- Be well-structured and logically organized"
             ),
             HumanMessage(
-                content=f"Research questions to answer in depth:\n{questions_text}\n\nSearch contexts and sources:\n{contexts_text}\n\nGenerate a concise, detailed answer that thoroughly addresses each research question with deep analysis from your expertise perspective, evidence from the sources, and well-reasoned conclusions.{(' Conversation history:\\n' + message_context) if message_context else ''}"
+                content=f"Research questions to answer in depth:\n{questions_text}\n\nSearch contexts and sources:\n{contexts_text}\n\nGenerate a concise, detailed answer that thoroughly addresses each research question with deep analysis from your expertise perspective, evidence from the sources, and well-reasoned conclusions.{(f' Conversation history:{chr(10)}{message_context}' if message_context else '')}"
             ),
         ]
     )
@@ -281,7 +281,7 @@ def write_introduction(state: ResearchState) -> ResearchState:
                 content="You are an expert academic and research writer. Generate a concise, engaging introduction that:\n- Provides rich context and background information\n- Clearly establishes the research topic and its significance\n- Outlines the scope and objectives of the research\n- Introduces key concepts and frameworks\n- Sets up the reader's expectations for the research\n- Uses sophisticated language and academic tone\n- Is detailed enough to stand alone while leading into the main content"
             ),
             HumanMessage(
-                content=f"Generate a detailed, concise introduction that thoroughly sets up the research topic, provides essential context, and engages the reader with well-developed background information.{(' Conversation history:\\n' + message_context) if message_context else ''}"
+                content=f"Generate a detailed, concise introduction that thoroughly sets up the research topic, provides essential context, and engages the reader with well-developed background information.{(f' Conversation history:{chr(10)}{message_context}' if message_context else '')}"
             ),
         ]
     )
@@ -307,7 +307,7 @@ def write_body(state: ResearchState) -> ResearchState:
                 content="You are an expert research writer. Generate a concise, well-structured body section that:\n- Organizes the research answer into clear, logical sections\n- Uses proper headings and subheadings for structure\n- Expands on key points with detailed explanations\n- Incorporates evidence from search contexts effectively\n- Maintains academic tone and professional presentation\n- Flows smoothly from one topic to the next\n- Provides thorough coverage of all research questions\n- Includes relevant examples, data, and supporting details"
             ),
             HumanMessage(
-                content=f"Research conducted:\n{research_text}\n\nGenerate a detailed, concise body section that transforms the research conducted into a well-structured, professional body with clear organization, detailed explanations, and smooth flow.{(' Conversation history:\\n' + message_context) if message_context else ''}"
+                content=f"Research conducted:\n{research_text}\n\nGenerate a detailed, concise body section that transforms the research conducted into a well-structured, professional body with clear organization, detailed explanations, and smooth flow.{(f' Conversation history:{chr(10)}{message_context}' if message_context else '')}"
             ),
         ]
     )
@@ -333,7 +333,7 @@ def write_conclusion(state: ResearchState) -> ResearchState:
                 content="You are an expert research analyst and writer. Generate a concise, insightful conclusion that:\n- Synthesizes key findings from the research\n- Provides deep analysis and interpretation of the results\n- Draws meaningful connections between different aspects of the research\n- Offers nuanced insights and implications\n- Addresses the broader significance and impact\n- Identifies patterns, trends, and important takeaways\n- Discusses limitations and areas for future research\n- Provides a strong, memorable closing that reinforces the main points"
             ),
             HumanMessage(
-                content=f"Research conducted:\n{research_text}\n\nGenerate a detailed, concise conclusion that thoroughly synthesizes the research findings, provides deep analysis, and offers meaningful insights and implications.{(' Conversation history:\\n' + message_context) if message_context else ''}"
+                content=f"Research conducted:\n{research_text}\n\nGenerate a detailed, concise conclusion that thoroughly synthesizes the research findings, provides deep analysis, and offers meaningful insights and implications.{(f'{chr(10)}{chr(10)}Conversation history:{chr(10)}{message_context}' if message_context else '')}"
             ),
         ]
     )
@@ -359,7 +359,7 @@ def finalize_report(state: ResearchState) -> ResearchState:
                 content="You are an expert research report writer and editor. Generate a polished, concise final report that:\n- Seamlessly integrates all sections into a cohesive narrative\n- Maintains consistent tone and style throughout\n- Ensures smooth transitions between introduction, body, and conclusion\n- Enhances clarity and flow of the entire document\n- Adds appropriate formatting and structure for readability\n- Includes executive summary elements where relevant\n- Creates a professional, publication-ready document\n- Ensures all sections work together to tell a complete research story"
             ),
             HumanMessage(
-                content=f"Research conducted:\n{research_text}\n\nIntroduction:\n{state.introduction}\n\nBody:\n{state.body}\n\nConclusion:\n{state.conclusion}\n\nGenerate a polished, concise final report that expertly combines all sections into a cohesive, well-structured document with enhanced flow, clarity, and professional presentation.{(' Conversation history:\\n' + message_context) if message_context else ''}"
+                content=f"Research conducted:\n{research_text}\n\nIntroduction:\n{state.introduction}\n\nBody:\n{state.body}\n\nConclusion:\n{state.conclusion}\n\nGenerate a polished, concise final report that expertly combines all sections into a cohesive, well-structured document with enhanced flow, clarity, and professional presentation.{(f' Conversation history:{chr(10)}{message_context}' if message_context else '')}"
             ),
         ]
     )
