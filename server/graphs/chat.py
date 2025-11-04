@@ -23,6 +23,7 @@ class RouteDecision(BaseModel):
     """Routing decision for research type."""
 
     route: Route = Field(description="Route to take: deep_research or quick_reply")
+    title: Optional[str] = Field(default=None)
 
 
 class QuickReply(BaseModel):
@@ -32,6 +33,7 @@ class QuickReply(BaseModel):
 
 
 class ChatState(BaseModel):
+    title: Optional[str] = Field(default=None)
     messages: Annotated[list[AnyMessage], add_messages] = Field(default_factory=list)
     router_next: Optional[Route] = Field(default=None)
 
@@ -48,7 +50,7 @@ def chat_agent(state: ChatState) -> ChatState:
     response = structured_llm.invoke(
         [
             SystemMessage(
-                content="You are a routing agent. Decide whether the question requires deep research or can be answered with a quick reply."
+                content="You are a routing agent. Decide whether the question requires deep research or can be answered with a quick reply and generate the title of the topic."
             ),
             HumanMessage(
                 content=f"Question: {last_message}\n\nShould this require deep research or quick reply?"
@@ -56,7 +58,7 @@ def chat_agent(state: ChatState) -> ChatState:
         ]
     )
 
-    return {"router_next": response.route}
+    return {"router_next": response.route, "title": response.title}
 
 
 def quick_reply_agent(state: ChatState) -> ChatState:
