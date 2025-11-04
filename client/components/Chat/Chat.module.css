@@ -1,27 +1,13 @@
 .chatContainer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   width: 100%;
-  padding: 1rem;
   background-color: var(--background);
-  border-top: 1px solid var(--border-color);
-  z-index: 30;
-}
-
-@media (min-width: 640px) {
-  .chatContainer {
-    left: 16rem;
-    width: calc(100% - 16rem);
-  }
 }
 
 .inputWrapper {
   max-width: 768px;
   margin: 0 auto;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 0.75rem;
   background-color: var(--message-bg);
   border: 1px solid var(--border-color);
@@ -48,6 +34,8 @@
   max-height: 200px;
   overflow: hidden;
   font-family: inherit;
+  text-align: left;
+  vertical-align: middle;
 }
 
 .input::placeholder {
@@ -69,9 +57,14 @@
   flex-shrink: 0;
 }
 
-.sendButton:hover {
+.sendButton:hover:not(:disabled) {
   background-color: var(--hover-bg);
   color: var(--foreground);
+}
+
+.sendButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .sendButton:active {

@@ -2,141 +2,135 @@
 import Chat from "@/components/Chat/Chat";
 import ChatMessage from "@/components/ChatMessage/ChatMessage";
 import Sidebar from "@/components/Sidebar/Sidebar";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { ChatState } from "@/types/types";
+import { useStream } from "@langchain/langgraph-sdk/react";
 import styles from "./page.module.css";
-import { useEffect, useState } from "react";
-import { Message } from "@/types/types";
 
-export default function page() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+function useSearchParam(key: string) {
+  const [value, setValue] = useState<string | null>(null);
 
   useEffect(() => {
-    const messages: Message[] = [
-      {
-        id: "1",
-        type: "user",
-        text: "Hello, can you help me with research?",
-        timestamp: "11:46",
-      },
-      {
-        id: "2",
-        type: "AI",
-        text: "Hello! I'd be happy to help you with research. What topic would you like to explore?",
-        timestamp: "11:47",
-      },
-      {
-        id: "3",
-        type: "user",
-        text: "I'm interested in learning about artificial intelligence and machine learning.",
-        timestamp: "11:48",
-      },
-      {
-        id: "4",
-        type: "AI",
-        text: "Great topic! Artificial intelligence (AI) is a broad field that encompasses machine learning, deep learning, natural language processing, and more. Machine learning is a subset of AI that focuses on algorithms that can learn from data.",
-        timestamp: "11:49",
-      },
-      {
-        id: "5",
-        type: "user",
-        text: "What are the key differences between supervised and unsupervised learning?",
-        timestamp: "11:50",
-      },
-      {
-        id: "6",
-        type: "AI",
-        text: "Supervised learning uses labeled data to train models, meaning the algorithm learns from examples with known outcomes. Unsupervised learning works with unlabeled data, finding patterns and structures without predefined labels.",
-        timestamp: "11:51",
-      },
-      {
-        id: "7",
-        type: "user",
-        text: "That makes sense. Can you recommend some good resources to learn more?",
-        timestamp: "11:52",
-      },
-      {
-        id: "8",
-        type: "AI",
-        text: "Certainly! I'd recommend starting with online courses like Andrew Ng's Machine Learning course on Coursera, reading books like 'Hands-On Machine Learning' by Aurélien Géron, and practicing with datasets on Kaggle.",
-        timestamp: "11:53",
-      },
-      {
-        id: "9",
-        type: "user",
-        text: "Thanks for the recommendations! I'll check those out.",
-        timestamp: "11:54",
-      },
-      {
-        id: "10",
-        type: "AI",
-        text: "You're welcome! Feel free to ask if you have any more questions about AI or machine learning. Good luck with your learning journey!",
-        timestamp: "11:55",
-      },
-      {
-        id: "11",
-        type: "user",
-        text: "Actually, I have another question. What programming languages are best for machine learning?",
-        timestamp: "11:56",
-      },
-      {
-        id: "12",
-        type: "AI",
-        text: "Python is the most popular language for machine learning due to its simplicity and extensive libraries like TensorFlow, PyTorch, scikit-learn, and pandas. R is also widely used for statistical analysis, and Julia is gaining traction for high-performance computing.",
-        timestamp: "11:57",
-      },
-      {
-        id: "13",
-        type: "user",
-        text: "I'm familiar with Python. Should I start with TensorFlow or PyTorch?",
-        timestamp: "11:58",
-      },
-      {
-        id: "14",
-        type: "AI",
-        text: "Both are excellent choices! PyTorch is often preferred by researchers for its dynamic computation graphs and Pythonic design, while TensorFlow is widely used in production. I'd suggest starting with PyTorch for learning, then exploring TensorFlow once you're comfortable.",
-        timestamp: "11:59",
-      },
-      {
-        id: "15",
-        type: "user",
-        text: "What about deep learning? How does it relate to machine learning?",
-        timestamp: "12:00",
-      },
-      {
-        id: "16",
-        type: "AI",
-        text: "Deep learning is a subset of machine learning that uses neural networks with multiple layers (hence 'deep'). It's particularly powerful for tasks like image recognition, natural language processing, and speech recognition. Deep learning models can automatically learn features from raw data.",
-        timestamp: "12:01",
-      },
-      {
-        id: "17",
-        type: "user",
-        text: "That's really interesting! Can you give me an example of a real-world application?",
-        timestamp: "12:02",
-      },
-      {
-        id: "18",
-        type: "AI",
-        text: "Sure! Examples include: recommendation systems (Netflix, Amazon), image recognition in medical diagnostics, autonomous vehicles using computer vision, voice assistants like Siri and Alexa, and language translation services. These all rely heavily on deep learning.",
-        timestamp: "12:03",
-      },
-      {
-        id: "19",
-        type: "user",
-        text: "Wow, AI is everywhere! What's the future of AI looking like?",
-        timestamp: "12:04",
-      },
-      {
-        id: "20",
-        type: "AI",
-        text: "The future looks very promising! We're seeing advances in areas like GPT models for natural language understanding, reinforcement learning for complex decision-making, and AI ethics becoming increasingly important. The integration of AI into various industries will continue to accelerate.",
-        timestamp: "12:05",
-      },
-    ];
-    setMessages(messages);
-  }, []);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      setValue(params.get(key) ?? null);
+    }
+  }, [key]);
+
+  const update = useCallback(
+    (value: string | null) => {
+      setValue(value);
+
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        if (value == null) {
+          url.searchParams.delete(key);
+        } else {
+          url.searchParams.set(key, value);
+        }
+
+        window.history.pushState({}, "", url.toString());
+      }
+    },
+    [key]
+  );
+
+  return [value, update] as const;
+}
+
+export default function Page() {
+  const [threadId, onThreadId] = useSearchParam("threadId");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("sidebar_collapsed");
+      return stored === "true";
+    }
+    return false;
+  });
+  const joinedThreadId = useRef<string | null>(null);
+
+  const thread = useStream<ChatState>({
+    apiUrl: "http://localhost:8123",
+    assistantId: "chat",
+    messagesKey: "messages",
+    threadId: threadId ?? undefined,
+    onThreadId,
+    onCreated: (run) => {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem(`resume:${run.thread_id}`, run.run_id);
+      }
+    },
+    onFinish: (_, run) => {
+      if (typeof window !== "undefined" && run?.thread_id) {
+        window.sessionStorage.removeItem(`resume:${run.thread_id}`);
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (!threadId || typeof window === "undefined") return;
+
+    const firstHumanMessage = thread.messages.find((m) => m.type === "human");
+    if (!firstHumanMessage) return;
+
+    const title =
+      typeof firstHumanMessage.content === "string"
+        ? firstHumanMessage.content.slice(0, 50)
+        : "New Conversation";
+
+    const conversation = {
+      threadId,
+      title: title || "New Conversation",
+      timestamp: Date.now(),
+    };
+
+    const stored = localStorage.getItem("deep_research_conversations");
+    let conversations = stored ? JSON.parse(stored) : [];
+
+    conversations = conversations.filter(
+      (c: { threadId: string }) => c.threadId !== threadId
+    );
+    conversations.unshift(conversation);
+    conversations = conversations.slice(0, 50);
+
+    localStorage.setItem(
+      "deep_research_conversations",
+      JSON.stringify(conversations)
+    );
+
+    window.dispatchEvent(new Event("conversationSaved"));
+  }, [threadId, thread.messages.length]);
+
+  // Ensure that we only join the stream once per thread.
+  useEffect(() => {
+    if (!threadId || typeof window === "undefined") return;
+
+    const resume = window.sessionStorage.getItem(`resume:${threadId}`);
+    if (resume && joinedThreadId.current !== threadId) {
+      thread.joinStream(resume);
+      joinedThreadId.current = threadId;
+    }
+  }, [threadId, thread]);
+
+  // Deduplicate messages by ID (keep the latest version of each message)
+  const uniqueMessages = useMemo(() => {
+    const messageMap = new Map();
+    thread.messages.forEach((message) => {
+      messageMap.set(message.id, message);
+    });
+    return Array.from(messageMap.values());
+  }, [thread.messages]);
+
   return (
-    <div>
+    <div
+      className={styles.container}
+      style={
+        {
+          "--sidebar-width": sidebarCollapsed ? "4rem" : "16rem",
+        } as React.CSSProperties
+      }
+    >
       <button
         className={styles.menuButton}
         onClick={() => setSidebarOpen(true)}
@@ -158,19 +152,41 @@ export default function page() {
           />
         </svg>
       </button>
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className={styles.mainContent}>
-        {messages.map((message) => (
-          <ChatMessage
-            key={message.id}
-            id={message.id}
-            text={message.text}
-            type={message.type}
-            timestamp={message.timestamp}
-          />
-        ))}
 
-        <Chat />
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        currentThreadId={threadId}
+        onThreadSelect={onThreadId}
+        onCollapsedChange={setSidebarCollapsed}
+      />
+
+      <div
+        className={`${styles.mainContent} ${
+          sidebarCollapsed ? styles.sidebarCollapsed : ""
+        }`}
+      >
+        <div className={styles.messagesContainer}>
+          {uniqueMessages.map((message) => (
+            <ChatMessage
+              key={message.id}
+              type={message.type}
+              content={message.content}
+            />
+          ))}
+        </div>
+
+        <div className={styles.chatWrapper}>
+          <Chat
+            onSendMessage={(message) => {
+              thread.submit(
+                { messages: [{ type: "human", content: message }] },
+                { streamResumable: true }
+              );
+            }}
+            isLoading={thread.isLoading}
+          />
+        </div>
       </div>
     </div>
   );

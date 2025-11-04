@@ -1,6 +1,6 @@
-export interface Message {
-  id: string;
-  type: "user" | "AI";
-  text: string;
-  timestamp: string;
-}
+import { Message } from "@langchain/langgraph-sdk";
+
+export type ChatState = {
+  messages: Message[];
+  router_next?: string;
+};

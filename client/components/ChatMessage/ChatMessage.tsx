@@ -1,19 +1,21 @@
-import { Message } from "@/types/types";
+import { Message } from "@langchain/core/messages";
+import ReactMarkdown from "react-markdown";
 import styles from "./ChatMessage.module.css";
 
-export default function ChatMessage({
-  type = "user",
-  text,
-  timestamp,
-}: Message) {
+export default function ChatMessage({ type, content }: Message) {
+  const contentString =
+    typeof content === "string" ? content : content.toString();
+
   return (
     <div
       className={`${styles.container} ${
-        type === "user" ? styles.userMessage : styles.aiMessage
+        type === "human" ? styles.userMessage : styles.aiMessage
       }`}
     >
       <div className={styles.messageBox}>
-        <p className={styles.messageText}>{text}</p>
+        <div className={styles.messageText}>
+          <ReactMarkdown>{contentString}</ReactMarkdown>
+        </div>
       </div>
     </div>
   );

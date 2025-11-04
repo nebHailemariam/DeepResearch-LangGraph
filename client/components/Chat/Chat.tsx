@@ -1,10 +1,16 @@
 "use client";
 
 import styles from "./Chat.module.css";
-import { useRef, useEffect } from "react";
+import { useRef, useState } from "react";
 
-export default function Chat() {
+interface ChatProps {
+  onSendMessage: (message: string) => void;
+  isLoading?: boolean;
+}
+
+export default function Chat({ onSendMessage, isLoading = false }: ChatProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [inputValue, setInputValue] = useState("");
 
   const handleInput = () => {
     const textarea = textareaRef.current;
@@ -14,27 +20,45 @@ export default function Chat() {
     }
   };
 
-  useEffect(() => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = "1.5rem";
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const message = inputValue.trim();
+    if (!message || isLoading) return;
+
+    setInputValue("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "1.5rem";
     }
-  }, []);
+
+    await onSendMessage(message);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
 
   return (
     <div className={styles.chatContainer}>
-      <div className={styles.inputWrapper}>
+      <form className={styles.inputWrapper} onSubmit={handleSubmit}>
         <textarea
           ref={textareaRef}
           className={styles.input}
           placeholder="Message Deep Research..."
           rows={1}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
           onInput={handleInput}
+          onKeyDown={handleKeyDown}
+          disabled={isLoading}
         />
         <button
           className={styles.sendButton}
-          type="button"
+          type="submit"
           aria-label="Send message"
+          disabled={isLoading || !inputValue.trim()}
         >
           <svg
             className={styles.sendIcon}
@@ -52,7 +76,7 @@ export default function Chat() {
             />
           </svg>
         </button>
-      </div>
+      </form>
     </div>
   );
 }
