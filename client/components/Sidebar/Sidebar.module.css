@@ -1,0 +1,241 @@
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  width: 16rem;
+  height: 100vh;
+  transition: transform 0.3s ease, width 0.3s ease;
+  transform: translateX(-100%);
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+@media (min-width: 640px) {
+  .sidebar {
+    transform: translateX(0);
+  }
+
+  .sidebar.collapsed {
+    width: 4rem;
+  }
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 45;
+}
+
+@media (min-width: 640px) {
+  .overlay {
+    display: none;
+  }
+}
+
+.sidebarContainer {
+  height: 100%;
+  padding: 1rem 0.75rem;
+  overflow-y: auto;
+  background-color: var(--primary-dark);
+  position: relative;
+}
+
+.collapseButton {
+  position: absolute;
+  top: 1rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background-color: transparent;
+  border: none;
+  border-radius: 0.375rem;
+  color: var(--foreground);
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
+  z-index: 10;
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.collapseButton.hidden {
+  opacity: 0;
+  transform: translateX(1rem);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.collapseButton:hover:not(.hidden) {
+  background-color: var(--hover-bg);
+}
+
+@media (max-width: 639px) {
+  .collapseButton {
+    display: none;
+  }
+}
+
+.collapseIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  color: var(--foreground);
+  background-color: transparent;
+  justify-content: center;
+  min-height: 3rem;
+  box-sizing: border-box;
+}
+
+.sidebar:not(.collapsed) .brand {
+  justify-content: flex-start;
+}
+
+.menuTitle {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem;
+  color: var(--foreground);
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background-color: var(--hover-bg);
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+  justify-content: center;
+}
+
+.sidebar:not(.collapsed) .menuTitle {
+  justify-content: flex-start;
+}
+
+.menuTitle:hover {
+  background-color: var(--hover-bg-strong);
+  transform: translateX(2px);
+}
+
+.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  color: var(--foreground);
+  transition: color 0.2s ease;
+}
+
+.label {
+  margin-left: 0.75rem;
+  flex: 1;
+  white-space: nowrap;
+}
+
+.labelSimple {
+  margin-left: 0.75rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+  max-width: 200px;
+  opacity: 1;
+  transition: max-width 0.3s ease, opacity 0.3s ease, margin-left 0.3s ease;
+}
+
+.sidebar.collapsed .labelSimple {
+  max-width: 0;
+  opacity: 0;
+  margin-left: 0;
+}
+
+.conversationsSection {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  opacity: 1;
+  max-height: 500px;
+  overflow: hidden;
+  transition: opacity 0.3s ease, max-height 0.3s ease, margin-top 0.3s ease,
+    padding-top 0.3s ease;
+}
+
+.conversationsSection.hidden {
+  opacity: 0;
+  max-height: 0;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.conversationList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.conversationItem {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.75rem;
+  color: var(--foreground);
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background-color: transparent;
+  border: none;
+  text-align: left;
+  gap: 0.25rem;
+}
+
+.conversationItem:hover {
+  background-color: var(--hover-bg);
+}
+
+.conversationItem.active {
+  background-color: var(--hover-bg-strong);
+}
+
+.conversationTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  color: var(--foreground);
+}
+
+.conversationDate {
+  font-size: 0.75rem;
+  color: var(--accent-gray);
+  font-weight: 400;
+}

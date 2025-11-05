@@ -1,6 +1,7 @@
 {
   "$schema": "https://langgra.ph/schema.json",
   "dependencies": ["."],
+  "env": ".env",
   "graphs": {
     "chat": "graphs/chat.py:chat_graph"
   }
