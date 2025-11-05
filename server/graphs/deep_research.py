@@ -9,7 +9,7 @@ from langgraph.graph.message import add_messages
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 import time
 
 load_dotenv()
@@ -141,15 +141,36 @@ def search_for_context(question: str, ddgs: DDGS) -> str:
         # Text search
         results = list(ddgs.text(search_query, max_results=4))
 
+        if not results:
+            print(f"Warning: No results for query: {search_query}")
+            return ""
+
         # Extract context from results
         context_parts = []
         for result in results:
+            # Try different possible field names
             body = (
                 result.get("body", "")
                 or result.get("snippet", "")
                 or result.get("description", "")
+                or result.get("text", "")
             )
-            title = result.get("title", "")
+            title = result.get("title", "") or result.get("heading", "")
+
+            # If still no body, try to get any text content
+            if not body and isinstance(result, dict):
+                # Try to get any non-empty string value
+                for key, value in result.items():
+                    if (
+                        isinstance(value, str)
+                        and value.strip()
+                        and key not in ["href", "url"]
+                    ):
+                        if not body:
+                            body = value
+                        elif not title and key in ["title", "heading"]:
+                            title = value
+
             if body and body.strip():
                 context_parts.append(
                     f"{title}\n{body}" if title and title.strip() else body
@@ -158,6 +179,7 @@ def search_for_context(question: str, ddgs: DDGS) -> str:
         return "\n\n".join(context_parts) if context_parts else ""
 
     except Exception as e:
+        print(f"Search error for query '{question}': {str(e)}")
         return f"Search error: {str(e)}"
 
 
