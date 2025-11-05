@@ -4,10 +4,11 @@ from langgraph.graph import END, StateGraph
 from langgraph.types import Send
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
-from langchain_core.messages import AIMessage, AnyMessage
+from langchain_core.messages import AIMessage, AnyMessage, ToolMessage
 from langgraph.graph.message import add_messages
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.runnables import RunnableConfig
 from duckduckgo_search import DDGS
 import time
 
@@ -89,6 +90,11 @@ def deep_research_agent(state: ResearchState) -> ResearchState:
     """Generate different analyst personas from message history."""
     messages = state.messages
 
+    tool_message = ToolMessage(
+        content="Generating analyst personas for research task...",
+        tool_call_id="deep_research_agent",
+    )
+
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
     structured_llm = llm.with_structured_output(Analysts)
 
@@ -105,9 +111,10 @@ def deep_research_agent(state: ResearchState) -> ResearchState:
             HumanMessage(
                 content=f"{prompt}\n\nCreate detailed analyst personas with concise expertise descriptions that will enable thorough research from multiple angles."
             ),
-        ]
+        ],
+        config=RunnableConfig(tags=["nostream"]),
     )
-    return {"analysts": response.personas}
+    return {"analysts": response.personas, "messages": [tool_message]}
 
 
 def search_for_context(question: str, ddgs: DDGS) -> str:
@@ -172,6 +179,11 @@ def route_to_questions(state: ResearchState) -> list[Send]:
 
 def generate_questions(state: AnalystResearchState) -> AnalystResearchState:
 
+    tool_message = ToolMessage(
+        content="Generating research questions...",
+        tool_call_id="generate_questions",
+    )
+
     message_context = (
         "\n".join([str(msg.content) for msg in state.messages])
         if state.messages
@@ -190,7 +202,8 @@ def generate_questions(state: AnalystResearchState) -> AnalystResearchState:
             HumanMessage(
                 content=f"Generate 2 detailed, well-crafted research questions that will drive thorough investigation from your expertise perspective. Each question should be specific enough to guide concise research while broad enough to uncover important insights.{(f' Conversation history:{chr(10)}{message_context}' if message_context else '')}"
             ),
-        ]
+        ],
+        config=RunnableConfig(tags=["nostream"]),
     )
 
     questions = response.questions
@@ -203,7 +216,11 @@ def generate_questions(state: AnalystResearchState) -> AnalystResearchState:
         context = search_for_context(question, ddgs)
         search_contexts.append(context)
 
-    return {"questions": questions, "search_contexts": search_contexts}
+    return {
+        "questions": questions,
+        "search_contexts": search_contexts,
+        "messages": [tool_message],
+    }
 
 
 def route_to_answers(state: ResearchState) -> list[Send]:
@@ -238,6 +255,11 @@ def route_to_answers(state: ResearchState) -> list[Send]:
 
 
 def generate_answer(state: AnalystResearchState) -> AnalystResearchState:
+    tool_message = ToolMessage(
+        content="Generating research answers...",
+        tool_call_id="generate_answer",
+    )
+
     messages = state.messages
     message_context = (
         "\n".join([str(msg.content) for msg in messages]) if messages else ""
@@ -260,10 +282,11 @@ def generate_answer(state: AnalystResearchState) -> AnalystResearchState:
             HumanMessage(
                 content=f"Research questions to answer in depth:\n{questions_text}\n\nSearch contexts and sources:\n{contexts_text}\n\nGenerate a concise, detailed answer that thoroughly addresses each research question with deep analysis from your expertise perspective, evidence from the sources, and well-reasoned conclusions.{(f' Conversation history:{chr(10)}{message_context}' if message_context else '')}"
             ),
-        ]
+        ],
+        config=RunnableConfig(tags=["nostream"]),
     )
 
-    return {"research": [response.answer]}
+    return {"research": [response.answer], "messages": [tool_message]}
 
 
 def write_introduction(state: ResearchState) -> ResearchState:
@@ -283,7 +306,8 @@ def write_introduction(state: ResearchState) -> ResearchState:
             HumanMessage(
                 content=f"Generate a detailed, concise introduction that thoroughly sets up the research topic, provides essential context, and engages the reader with well-developed background information.{(f' Conversation history:{chr(10)}{message_context}' if message_context else '')}"
             ),
-        ]
+        ],
+        config=RunnableConfig(tags=["nostream"]),
     )
 
     return {"introduction": response.introduction}
@@ -309,7 +333,8 @@ def write_body(state: ResearchState) -> ResearchState:
             HumanMessage(
                 content=f"Research conducted:\n{research_text}\n\nGenerate a detailed, concise body section that transforms the research conducted into a well-structured, professional body with clear organization, detailed explanations, and smooth flow.{(f' Conversation history:{chr(10)}{message_context}' if message_context else '')}"
             ),
-        ]
+        ],
+        config=RunnableConfig(tags=["nostream"]),
     )
 
     return {"body": response.body}
@@ -335,13 +360,19 @@ def write_conclusion(state: ResearchState) -> ResearchState:
             HumanMessage(
                 content=f"Research conducted:\n{research_text}\n\nGenerate a detailed, concise conclusion that thoroughly synthesizes the research findings, provides deep analysis, and offers meaningful insights and implications.{(f'{chr(10)}{chr(10)}Conversation history:{chr(10)}{message_context}' if message_context else '')}"
             ),
-        ]
+        ],
+        config=RunnableConfig(tags=["nostream"]),
     )
 
     return {"conclusion": response.conclusion}
 
 
 def finalize_report(state: ResearchState) -> ResearchState:
+    tool_message = ToolMessage(
+        content="Writing report sections...",
+        tool_call_id="write_report_sections",
+    )
+
     messages = state.messages
     message_context = (
         "\n".join([str(msg.content) for msg in messages]) if messages else ""
@@ -351,9 +382,8 @@ def finalize_report(state: ResearchState) -> ResearchState:
     )
 
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-    structured_llm = llm.with_structured_output(Report)
 
-    response: Report = structured_llm.invoke(
+    stream = llm.stream(
         [
             SystemMessage(
                 content="You are an expert research report writer and editor. Generate a polished, concise final report that:\n- Seamlessly integrates all sections into a cohesive narrative\n- Maintains consistent tone and style throughout\n- Ensures smooth transitions between introduction, body, and conclusion\n- Enhances clarity and flow of the entire document\n- Adds appropriate formatting and structure for readability\n- Includes executive summary elements where relevant\n- Creates a professional, publication-ready document\n- Ensures all sections work together to tell a complete research story"
@@ -364,7 +394,12 @@ def finalize_report(state: ResearchState) -> ResearchState:
         ]
     )
 
-    return {"messages": [AIMessage(content=response.report)]}
+    full_response = ""
+    for chunk in stream:
+        if hasattr(chunk, "content") and chunk.content:
+            full_response += chunk.content
+
+    return {"messages": [tool_message, AIMessage(content=full_response)]}
 
 
 builder = StateGraph(ResearchState)
