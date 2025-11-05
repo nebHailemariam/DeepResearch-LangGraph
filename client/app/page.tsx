@@ -71,28 +71,32 @@ export default function Page() {
   useEffect(() => {
     if (!threadId || typeof window === "undefined") return;
 
-    const firstHumanMessage = thread.messages.find((m) => m.type === "human");
-    if (!firstHumanMessage) return;
-
     const title =
-      typeof firstHumanMessage.content === "string"
-        ? firstHumanMessage.content.slice(0, 50)
-        : "New Conversation";
+      ((thread as any).values as ChatState)?.title ||
+      ((thread as any).state as ChatState)?.title ||
+      (() => {
+        const firstHumanMessage = thread.messages.find(
+          (m) => m.type === "human"
+        );
+        if (!firstHumanMessage) return "New Conversation";
+        return typeof firstHumanMessage.content === "string"
+          ? firstHumanMessage.content.slice(0, 50)
+          : "New Conversation";
+      })();
 
-    const conversation = {
+    if (!title) return;
+
+    const conversations = JSON.parse(
+      localStorage.getItem("deep_research_conversations") || "[]"
+    )
+      .filter((c: { threadId: string }) => c.threadId !== threadId)
+      .slice(0, 49);
+
+    conversations.unshift({
       threadId,
       title: title || "New Conversation",
       timestamp: Date.now(),
-    };
-
-    const stored = localStorage.getItem("deep_research_conversations");
-    let conversations = stored ? JSON.parse(stored) : [];
-
-    conversations = conversations.filter(
-      (c: { threadId: string }) => c.threadId !== threadId
-    );
-    conversations.unshift(conversation);
-    conversations = conversations.slice(0, 50);
+    });
 
     localStorage.setItem(
       "deep_research_conversations",
@@ -100,12 +104,15 @@ export default function Page() {
     );
 
     window.dispatchEvent(new Event("conversationSaved"));
-  }, [threadId, thread.messages.length]);
+  }, [
+    threadId,
+    thread.messages.length,
+    (thread as any).values,
+    (thread as any).state,
+  ]);
 
-  // Ensure that we only join the stream once per thread.
   useEffect(() => {
     if (!threadId || typeof window === "undefined") return;
-
     const resume = window.sessionStorage.getItem(`resume:${threadId}`);
     if (resume && joinedThreadId.current !== threadId) {
       thread.joinStream(resume);
@@ -113,14 +120,36 @@ export default function Page() {
     }
   }, [threadId, thread]);
 
-  // Deduplicate messages by ID (keep the latest version of each message)
   const uniqueMessages = useMemo(() => {
     const messageMap = new Map();
-    thread.messages.forEach((message) => {
-      messageMap.set(message.id, message);
+    thread.messages.forEach((msg) => messageMap.set(msg.id, msg));
+    const messages = Array.from(messageMap.values());
+
+    let latestToolMsg: (typeof messages)[0] | null = null;
+    let latestToolIdx = -1;
+
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].type === "tool") {
+        latestToolMsg = messages[i];
+        latestToolIdx = i;
+        break;
+      }
+    }
+
+    const hasAIMessageAfterTool =
+      latestToolIdx >= 0 &&
+      messages.slice(latestToolIdx + 1).some((m) => m.type === "ai");
+    const isStreaming =
+      thread.isLoading && messages.some((m) => m.type === "ai");
+
+    return messages.filter((msg) => {
+      if (msg.type === "tool") {
+        if (isStreaming || hasAIMessageAfterTool) return false;
+        return msg === latestToolMsg;
+      }
+      return true;
     });
-    return Array.from(messageMap.values());
-  }, [thread.messages]);
+  }, [thread.messages, thread.isLoading]);
 
   return (
     <div
