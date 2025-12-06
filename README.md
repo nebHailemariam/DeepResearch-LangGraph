@@ -8,6 +8,8 @@ The system uses a fan-in/fan-out architecture with parallel processing - multipl
 
 The UI shows progress indicators while it's working, so you know what's happening at each step.
 
+![Workflow Diagram](image.png)
+
 ## Setup
 
 You'll need Python 3.11+ and Node.js 18+.
