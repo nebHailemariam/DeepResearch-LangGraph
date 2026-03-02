@@ -51,7 +51,7 @@ export default function Page() {
   const joinedThreadId = useRef<string | null>(null);
 
   const thread = useStream<ChatState>({
-    apiUrl: "http://localhost:8123",
+    apiUrl: "http://localhost:2024",
     assistantId: "chat",
     messagesKey: "messages",
     threadId: threadId ?? undefined,
